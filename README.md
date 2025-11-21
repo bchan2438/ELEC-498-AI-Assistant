@@ -5,6 +5,7 @@ AI coding Assistant for finding and fixing defects
 Instructions for running: 
 
 Clone repository to your local machine 
+
 Open docker desktop and ensure docker engine is running 
 
 In the terminal run: 
