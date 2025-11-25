@@ -2,12 +2,7 @@ from datasets import load_dataset
 def load_swebench(split):
     # Load lite database 
     sbl = load_dataset('SWE-bench/SWE-bench_Lite', split=split)
-    # tests to ensure database is being pulled correctly. will be removed before final product 
-    print(type(sbl))
-    print(sbl)
-
-    print(sbl[50])
-
+    
     return sbl
 
 def transform_dataset(sbl):
