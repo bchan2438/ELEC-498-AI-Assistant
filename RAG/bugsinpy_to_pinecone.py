@@ -16,6 +16,9 @@ except ImportError:
 OPENAI_MODEL = "text-embedding-ada-002"
 PINECONE_INDEX_NAME = "bugsinpy-bug-fixes"
 EMBEDDING_DIMENSION = 1536  # OpenAI ada-002 dimension
+MAX_TOKENS = 8000  # ada-002 limit is 8192, use 8000 for safety
+# Rough estimate: 1 token ≈ 4 characters
+MAX_CHARACTERS = MAX_TOKENS * 4
 
 # Initialize and return OpenAI client.
 def get_openai_client():
@@ -56,15 +59,84 @@ def get_bugsinpy_projects(bugsinpy_path: str) -> List[str]:
 def checkout_bug_version(project_name: str, bug_id: int, version: int, 
                         bugsinpy_path: str, workspace: str) -> str:
     version_value = "0" if version == 0 else "1"
-    checkout_path = os.path.join(workspace, f"{project_name}_bug{bug_id}_v{version}")
+    # Use absolute path for checkout directory
+    checkout_path = os.path.abspath(os.path.join(workspace, f"{project_name}_bug{bug_id}_v{version}"))
     
-    subprocess.run(
-        ["bugsinpy-checkout", "-p", project_name, "-v", version_value, 
-         "-i", str(bug_id), "-w", checkout_path],
-        check=True,
-        cwd=bugsinpy_path,
-        capture_output=True
-    )
+    # Use absolute path to bugsinpy-checkout command
+    checkout_cmd = os.path.abspath(os.path.join(bugsinpy_path, "framework", "bin", "bugsinpy-checkout"))
+    bugsinpy_abs_path = os.path.abspath(bugsinpy_path)
+    
+    # On Windows, use Git Bash to run shell scripts
+    if os.name == 'nt':  # Windows
+        # Try to find Git Bash
+        git_bash_paths = [
+            r"C:\Program Files\Git\bin\bash.exe",
+            r"C:\Program Files (x86)\Git\bin\bash.exe",
+        ]
+        bash_exe = None
+        for path in git_bash_paths:
+            if os.path.exists(path):
+                bash_exe = path
+                break
+        
+        if not bash_exe:
+            raise FileNotFoundError("Git Bash not found. Please install Git for Windows.")
+        
+        # Verify bash executable exists
+        if not os.path.exists(bash_exe):
+            raise FileNotFoundError(f"Git Bash executable not found at: {bash_exe}")
+        
+        # Convert Windows paths to forward slashes for bash
+        checkout_cmd_bash = checkout_cmd.replace("\\", "/")
+        checkout_path_bash = checkout_path.replace("\\", "/")
+        bugsinpy_abs_path_bash = bugsinpy_abs_path.replace("\\", "/")
+        
+        # Verify paths exist before running
+        if not os.path.exists(checkout_cmd):
+            raise FileNotFoundError(f"bugsinpy-checkout not found at: {checkout_cmd}")
+        
+        # Use raw string for bash executable path to handle spaces
+        cmd_args = [bash_exe, checkout_cmd_bash, "-p", project_name, "-v", version_value, 
+                    "-i", str(bug_id), "-w", checkout_path_bash]
+        
+        # Debug output to see what's being executed
+        print(f"DEBUG: Bash exe: {bash_exe}")
+        print(f"DEBUG: Script: {checkout_cmd}")
+        print(f"DEBUG: Command: {' '.join(cmd_args)}")
+        
+        try:
+            result = subprocess.run(
+                cmd_args,
+                check=True,
+                cwd=bugsinpy_abs_path_bash,
+                capture_output=True,
+                text=True
+            )
+        except subprocess.CalledProcessError as e:
+            error_output = e.stderr if e.stderr else e.stdout if e.stdout else "No error output"
+            raise RuntimeError(
+                f"bugsinpy-checkout failed with exit code {e.returncode}.\n"
+                f"Command: {' '.join(cmd_args)}\n"
+                f"Error output: {error_output}"
+            ) from e
+        except FileNotFoundError as e:
+            error_msg = (
+                f"Failed to execute command.\n"
+                f"Bash executable: {bash_exe} (exists: {os.path.exists(bash_exe)})\n"
+                f"Script path: {checkout_cmd} (exists: {os.path.exists(checkout_cmd)})\n"
+                f"Command args: {cmd_args}\n"
+                f"Working dir: {bugsinpy_abs_path_bash}\n"
+                f"Original error: {e}"
+            )
+            raise FileNotFoundError(error_msg) from e
+    else:
+        subprocess.run(
+            [checkout_cmd, "-p", project_name, "-v", version_value, 
+             "-i", str(bug_id), "-w", checkout_path],
+            check=True,
+            cwd=bugsinpy_abs_path,
+            capture_output=True
+        )
     return checkout_path
 
 
@@ -142,11 +214,24 @@ def create_bug_fix_pair(project_name: str, bug_id: int, buggy_path: str,
     
     return combined_text, metadata
 
+# Truncate text to fit within token limits.
+def truncate_text(text: str, max_chars: int = MAX_CHARACTERS) -> str:
+    """Truncate text to fit within embedding model token limits."""
+    if len(text) <= max_chars:
+        return text
+    # Truncate and add indicator
+    return text[:max_chars - 50] + "\n\n[Text truncated due to length limit...]"
+
 # Generate embedding for text using OpenAI.
 def generate_embedding(text: str, client: openai.OpenAI) -> List[float]:
+    # Truncate text if too long
+    truncated_text = truncate_text(text)
+    if len(text) > len(truncated_text):
+        print(f"  Warning: Text truncated from {len(text)} to {len(truncated_text)} characters")
+    
     response = client.embeddings.create(
         model=OPENAI_MODEL,
-        input=text
+        input=truncated_text
     )
     return response.data[0].embedding
 
