@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
 
-CREATE TBALE IF NOT EXISTS swebench_data(
+CREATE TABLE IF NOT EXISTS swebench_data(
 id BIGSERIAL PRIMARY KEY, 
 
 -- Properties 
