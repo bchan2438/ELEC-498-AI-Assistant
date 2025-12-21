@@ -12,7 +12,7 @@ def connection():
         dbname="swe_bench", # change to your database name if needed 
         user = "postgres", # change to your user if needed 
         password = "password", # change this to the password for postgres on your local machine 
-        host = "localhost",
+        host = "localhost", #or host.docker.internal if you are using docker to run it 
         port = 5432, # This is the port that your postgres is running on you local machine. change if needed 
         
     )
@@ -72,3 +72,61 @@ def debug_print_example(split="test", idx=0):
     mapped = next(transform_dataset(sbl))
     print(mapped)
 
+def parse_created_at(created_at_str: str):
+    if not created_at_str:
+        return None
+    
+    if created_at_str.endswith("Z"):
+        created_at_str = created_at_str[:-1] + "+00:00"
+    return datetime.fromisoformat(created_at_str)
+
+# converts to JSONB 
+def parse_json_list(s: str):
+    if not s:
+        return []
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError:
+        return [s]
+
+
+def insert_data(conn, split):
+    sbl = load_swebench(split)
+
+    with conn.cursor() as cur:
+        for row in transform_dataset(sbl):
+
+           
+            fail_list = parse_json_list(row["fail_to_pass"])
+            pass_list = parse_json_list(row["pass_to_pass"])
+
+            cur.execute(
+                """
+                INSERT INTO swebench_data (
+                    instance_id, repo, base_commit, version, environment_setup_commit,
+                    problem_statement, hint, patch, test_patch, created_at,
+                    fail_to_pass, pass_to_pass, embedding
+                )
+                VALUES (%s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s,
+                        %s, %s, %s)
+                ON CONFLICT (instance_id) DO NOTHING;
+                """,
+                (
+                    row["instance_id"],
+                    row["repo"],
+                    row["base_commit"],
+                    row["version"],
+                    row["environment_setup_commit"],
+                    row["problem_statement"],
+                    row["hint"],
+                    row["patch"],
+                    row["test_patch"],
+                    row["created_at"],
+                    Json(fail_list),
+                    Json(pass_list),
+                    None,  # replace with vector embedding once finished 
+                )
+            )
+
+    conn.commit()
