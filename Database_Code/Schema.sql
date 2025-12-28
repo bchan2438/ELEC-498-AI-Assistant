@@ -30,7 +30,7 @@ pass_to_pass JSONB NOT NULL,
 
 
 -- Vector embedding 
-embedding vector(200) -- 200 is a placeholder, will change once embedding code is finished 
+embedding vector(384) -- 200 is a placeholder, will change once embedding code is finished. Changed to 384. May need to be altered if the table has already been created.
 
 
 

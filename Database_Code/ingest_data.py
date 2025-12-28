@@ -5,6 +5,8 @@ from psycopg2.extras import Json
 from datetime import datetime
 import json
 import os
+from sentence_transformers import SentenceTransformer
+
 
 # connects the postgresql database to this codebase 
 def connection():
@@ -40,29 +42,35 @@ def load_swebench(split):
     
     return sbl
 
+
+# function to add embeddings 
+_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+def make_embedding_text(row: dict) -> str:
+    hint = row.get("hints_text") or ""
+    return f"{row['problem_statement']}\n\nHints:\n{hint}".strip()
+
+
 #function to transform raw data in to a easily manipulated state 
 def transform_dataset(sbl):
-
     for row in sbl:
+        text = make_embedding_text(row)
+        emb = _model.encode(text, normalize_embeddings=True).tolist()
+        
         yield {
             "instance_id": row["instance_id"],
             "repo": row["repo"],
             "base_commit": row["base_commit"],
             "version": row["version"],
             "environment_setup_commit": row["environment_setup_commit"],
-
             "problem_statement": row["problem_statement"],
             "hint": row["hints_text"],  
-
             "patch": row["patch"],
             "test_patch": row["test_patch"],
-
             "created_at": row["created_at"],
-
             "fail_to_pass": row["FAIL_TO_PASS"],
             "pass_to_pass": row["PASS_TO_PASS"],
-
-            "embedding": None,  
+            "embedding": emb,  
         }
 
 
