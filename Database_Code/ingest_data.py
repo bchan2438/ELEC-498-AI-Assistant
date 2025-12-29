@@ -78,7 +78,14 @@ def transform_dataset(sbl):
 def debug_print_example(split="test", idx=0):
     sbl = load_swebench(split)
     mapped = next(transform_dataset(sbl))
-    print(mapped)
+
+    # 🔍 TEMP DEBUG CHECKS
+    print("Embedding type:", type(mapped["embedding"]))
+    print("Embedding length:", len(mapped["embedding"]))
+    print("First 5 values:", mapped["embedding"][:5])
+
+    # Optional: see full row
+    # print(mapped)
 
 def parse_created_at(created_at_str: str):
     if not created_at_str:
@@ -138,3 +145,8 @@ def insert_data(conn, split):
             )
 
     conn.commit()
+
+
+
+
+
