@@ -30,8 +30,10 @@ pass_to_pass JSONB NOT NULL,
 
 
 -- Vector embedding 
-embedding vector(384) -- 200 is a placeholder, will change once embedding code is finished. Changed to 384. May need to be altered if the table has already been created.
-
+embedding vector(1536) -- 200 is a placeholder, will change once embedding code is finished. Changed to 1536. May need to be altered if the table has already been created.
+-- ALTER TABLE swebench_data
+-- ALTER COLUMN embedding TYPE vector(1536);
+-- might need to run these two lines above
 
 
 
