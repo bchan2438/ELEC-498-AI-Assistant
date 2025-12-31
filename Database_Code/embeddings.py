@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 
-client = OpenAi(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 OPENAI_MODEL = "text-embedding-ada-002"
 
 def embed_text(text: str) -> list[float]:
