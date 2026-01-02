@@ -137,7 +137,7 @@ def insert_data(conn, split):
                     row["created_at"],
                     Json(fail_list),
                     Json(pass_list),
-                    None,  # replace with vector embedding once finished 
+                    row["embedding"],
                 )
             )
 
