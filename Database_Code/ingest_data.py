@@ -49,8 +49,11 @@ def make_embedding_text(row: dict) -> str:
 
 
 #function to transform raw data in to a easily manipulated state 
-def transform_dataset(sbl):
-    for row in sbl:
+def transform_dataset(sbl, limit=1):
+    for i, row in enumerate(sbl):
+        if i >= limit:
+            break
+
         text = make_embedding_text(row)
         emb = embed_text(text)
         
@@ -74,7 +77,7 @@ def transform_dataset(sbl):
 # function to ensure that program is functioning as intended 
 def debug_print_example(split="test", idx=0):
     sbl = load_swebench(split)
-    mapped = next(transform_dataset(sbl))
+    mapped = next(transform_dataset(sbl, limit=1))
 
     # 🔍 TEMP DEBUG CHECKS
     print("Embedding type:", type(mapped["embedding"]))
