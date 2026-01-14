@@ -1,5 +1,6 @@
 from openai import OpenAI
 import os 
+from Database_Code.embeddings import embed_text
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -21,7 +22,7 @@ def retrieve_topk(conn, query: str, k: int = 5):
             ORDER BY embedding <=> %s
             LIMIT %s;
             """,
-            (q_emb, k),
+           (q_emb, k),
         )
         return cur.fetchall()
     

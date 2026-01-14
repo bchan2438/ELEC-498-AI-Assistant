@@ -7,7 +7,7 @@ def main():
     conn = connection()
     run_schema(conn)
     insert_data(conn, "test")
-    print(rag_answer(conn, "Question"))
+   # print(rag_answer(conn, "Question"))
     conn.close()
 
 
