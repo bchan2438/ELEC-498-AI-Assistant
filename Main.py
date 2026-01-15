@@ -2,11 +2,11 @@ from Database_Code.ingest_data import load_swebench, transform_dataset, debug_pr
 
 
 def main(): 
-    debug_print_example()
+    #debug_print_example()
     conn = connection()
-    run_schema(conn)
-    insert_data(conn, "test")
-   # print(rag_answer(conn, "Question"))
+    # run_schema(conn)
+    # insert_data(conn, "test")
+    # print(rag_answer(conn, "Question"))
     conn.close()
 
 
