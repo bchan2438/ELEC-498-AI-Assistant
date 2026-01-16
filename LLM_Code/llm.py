@@ -4,7 +4,7 @@ from Database_Code.embeddings import embed_text
 api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
-def call_llm(prompt: str, model: str = "Insert model # here as gpt-x.y") -> str:
+def call_llm(prompt: str, model: str = "gpt-5-mini-2025-08-07") -> str:
     resp = client.responses.create(
         model = model,
         input = prompt,
