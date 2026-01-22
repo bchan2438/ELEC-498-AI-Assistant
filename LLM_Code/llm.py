@@ -12,7 +12,7 @@ def call_llm(prompt: str, model: str = "gpt-5-mini-2025-08-07") -> str:
     return resp.output_text
 
 def retrieve_topk(conn, query: str, k: int = 5):
-    q_emb = embed_text(query) # not functional rn, will fix once text embedding is more figured out 
+    q_emb = embed_text(query) 
     with conn.cursor() as cur:
         cur.execute(
             """

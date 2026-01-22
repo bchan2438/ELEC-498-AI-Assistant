@@ -4,7 +4,7 @@ from Database_Code.ingest_data import load_swebench, transform_dataset, debug_pr
 def main(): 
     #debug_print_example()
     conn = connection()
-    # grab_database()
+    # grab_database(conn)
     # print(rag_answer(conn, "Question"))
     conn.close()
 
