@@ -5,6 +5,8 @@ from typing import List, Tuple
 
 from openai import OpenAI
 import psycopg2  # only used for type hints / cursor usage
+from pgvector.psycopg2 import register_vector
+
 from Database_Code.embeddings import embed_text
 
 # OpenAI client + LLM call
@@ -52,7 +54,7 @@ RetrievedRow = Tuple[str, str, str, str]
 # (instance_id, repo, problem_statement, patch)
 
 
-def retrieve_topk(conn: psycopg2.extensions.connection, query: str, k: int = 5) -> List[RetrievedRow]:
+def retrieve_topk(conn, query: str, k: int = 5) -> List[RetrievedRow]:
     """
     Retrieve the top-k nearest rows from swebench_data using pgvector.
 
@@ -60,8 +62,12 @@ def retrieve_topk(conn: psycopg2.extensions.connection, query: str, k: int = 5) 
     - swebench_data.embedding must be a pgvector column (VECTOR type)
     - pgvector extension must be installed: CREATE EXTENSION vector;
     """
+    
     # 1) Convert query text to embedding vector (Python list[float])
     q_emb = embed_text(query)
+
+    # code was taking q_emb as a numeric array, so this manually casts to vector 
+    q_vec = "[" + ",".join(map(str, q_emb)) + "]"
 
     # 2) Run nearest-neighbor search in SQL
     # '<=>': pgvector distance operator (depends on your index/operator class)
@@ -74,7 +80,7 @@ def retrieve_topk(conn: psycopg2.extensions.connection, query: str, k: int = 5) 
     """
 
     with conn.cursor() as cur:
-        cur.execute(sql, (q_emb, k))
+        cur.execute(sql, (q_vec, k))
         rows = cur.fetchall()
 
     return rows
