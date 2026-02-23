@@ -9,6 +9,8 @@ from pgvector.psycopg2 import register_vector
 
 from Database_Code.embeddings import embed_text
 
+import time
+
 # OpenAI client + LLM call
 
 def get_openai_client() -> OpenAI:
@@ -31,11 +33,13 @@ def call_llm(prompt: str, model: str = "gpt-5-mini-2025-08-07") -> str:
     - This uses the OpenAI Responses API.
     - 'resp.output_text' is a convenience property that returns the concatenated text output.
     """
+    
     client = get_openai_client()
 
     resp = client.responses.create(
         model=model,
         input=prompt,
+        max_output_tokens=1000
     )
 
     # output_text is typically present for text-only requests
@@ -43,6 +47,7 @@ def call_llm(prompt: str, model: str = "gpt-5-mini-2025-08-07") -> str:
     if not text:
         # Fallback: return something safe instead of empty
         return "No text output returned by the model."
+    
     return text
 
 
@@ -54,7 +59,7 @@ RetrievedRow = Tuple[str, str, str, str]
 # (instance_id, repo, problem_statement, patch)
 
 
-def retrieve_topk(conn, query: str, k: int = 5) -> List[RetrievedRow]:
+def retrieve_topk(conn, query: str, k: int = 3) -> List[RetrievedRow]:
     """
     Retrieve the top-k nearest rows from swebench_data using pgvector.
 
@@ -65,6 +70,7 @@ def retrieve_topk(conn, query: str, k: int = 5) -> List[RetrievedRow]:
     
     # 1) Convert query text to embedding vector (Python list[float])
     q_emb = embed_text(query)
+    
 
     # code was taking q_emb as a numeric array, so this manually casts to vector 
     q_vec = "[" + ",".join(map(str, q_emb)) + "]"
@@ -99,7 +105,9 @@ def rag_answer(
     - Build a prompt that includes those examples
     - Ask the LLM for an answer grounded in retrieved context
     """
+    
     rows = retrieve_topk(conn, user_question, k=k)
+    
 
     if not rows:
         # If retrieval returns nothing, still answer but admit no examples were found.
@@ -128,19 +136,24 @@ No retrieved examples were found in the database. Answer using general best prac
     # Prompt with basic guardrails:
     # - Use the retrieved examples
     # - If unsure, say what is missing
-    prompt = f"""You are a coding assistant for defect detection and fixing.
+    prompt = f"""
+You are a coding assistant.
 
-Task:
-Use the retrieved examples to help answer the user question. If the examples do not contain enough information, say what is missing and propose the safest next step.
+IMPORTANT:
+- The retrieved examples below may contain unrelated bugs.
+- They are provided only as patterns.
+- Do NOT answer issues inside the retrieved examples.
+- Only answer the USER QUESTION.
 
-User question:
-{user_question}
-
-Retrieved examples (top {k}):
+========== RETRIEVED EXAMPLES ==========
 {context}
 
-Answer:
+========== USER QUESTION ==========
+{user_question}
+
+Provide an explanation of the issues, one best practice corrected code. 
 """
+   
     return call_llm(prompt, model=model)
 
 
