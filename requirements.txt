@@ -42,7 +42,7 @@ pandas==2.3.3
 pgvector==0.4.1
 pillow==11.0.0
 propcache==0.4.1
-psycopg2==2.9.11
+psycopg2-binary==2.9.11
 pyarrow==22.0.0
 pycparser==2.23
 pydantic==2.12.5

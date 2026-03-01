@@ -1,0 +1,49 @@
+{
+  "name": "coding-assistant",
+  "displayName": "coding-assistant",
+  "description": "An AI coding assistant designed to help programmers write, understand, and debug code. It combines an LLM API with RAG, which allows it to retrieve relevant information from a database before generating a new solution.",
+  "version": "0.0.1",
+  "publisher": "undefined_publisher",
+  "engines": {
+    "vscode": "^1.107.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "coding-assistant-sidebar",
+          "title": "Coding Assistant",
+          "icon": "$(play)"
+        }
+      ]
+    },
+    "views": {
+      "coding-assistant-sidebar": [
+        {
+          "type": "webview",
+          "id": "codingAssistant.sidebarView",
+          "name": "Run Python File"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "codingAssistant.runFile",
+        "title": "Coding Assistant: Run Active Python File"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.107.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.0"
+  }
+}
