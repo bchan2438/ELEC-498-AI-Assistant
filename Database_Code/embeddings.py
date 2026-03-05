@@ -32,8 +32,6 @@ def truncate(text: str, max_tokens: int = MAX_TOKENS) -> str:
 
 def embed_text(text: str) -> list[float]:
     text = truncate(text)
-   
-    print("Token count:", len(enc.encode(text)))
     resp = client.embeddings.create(
         model=OPENAI_MODEL,
         input=text,

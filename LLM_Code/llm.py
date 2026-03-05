@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import json
 import os
 from typing import List, Tuple
 
@@ -59,7 +59,7 @@ RetrievedRow = Tuple[str, str, str, str]
 # (instance_id, repo, problem_statement, patch)
 
 
-def retrieve_topk(conn, query: str, k: int = 3) -> List[RetrievedRow]:
+def retrieve_topk(conn, code: str, error:str, query: str, k: int = 3) -> List[RetrievedRow]:
     """
     Retrieve the top-k nearest rows from swebench_data using pgvector.
 
@@ -67,16 +67,17 @@ def retrieve_topk(conn, query: str, k: int = 3) -> List[RetrievedRow]:
     - swebench_data.embedding must be a pgvector column (VECTOR type)
     - pgvector extension must be installed: CREATE EXTENSION vector;
     """
-    
-    # 1) Convert query text to embedding vector (Python list[float])
-    q_emb = embed_text(query)
+    queries = generate_retrieval_queries(code, error)
+    concat_queries= [
+        error,
+        f"Python error: {error}",
+        code[:500],  # small snippet
+        *queries
+    ]
     
 
-    # code was taking q_emb as a numeric array, so this manually casts to vector 
-    q_vec = "[" + ",".join(map(str, q_emb)) + "]"
+    results = []
 
-    # 2) Run nearest-neighbor search in SQL
-    # '<=>': pgvector distance operator (depends on your index/operator class)
     sql = """
         SELECT instance_id, repo, problem_statement, patch
         FROM swebench_data
@@ -85,28 +86,65 @@ def retrieve_topk(conn, query: str, k: int = 3) -> List[RetrievedRow]:
         LIMIT %s;
     """
 
-    with conn.cursor() as cur:
-        cur.execute(sql, (q_vec, k))
-        rows = cur.fetchall()
+    for q in concat_queries:
+        q_emb = embed_text(q)
+        q_vec = "[" + ",".join(map(str, q_emb)) + "]"
 
-    return rows
+        with conn.cursor() as cur:
+            cur.execute(sql, (q_vec, k))
+            rows = cur.fetchall()
+            results.extend(rows)
+
+    # remove duplicates using instance_id
+    unique = {r[0]: r for r in results}
+
+    return list(unique.values())[:k]
+
+def generate_retrieval_queries(code: str, error: str) -> list[str]:
+
+    snippet = code[:1200] 
+
+    prompt = f"""
+You generate search queries for retrieving similar bugs from a dataset of GitHub issues.
+
+Given:
+- Python error message
+- code snippet
+
+Return EXACTLY a JSON array of 3 short strings.
+Each string should be a GitHub-issue-style bug description (max 12 words).
+
+Error:
+{error}
+
+Code snippet:
+{snippet}
+"""
+
+    raw = call_llm(prompt)
+
+    #parse raw 
+    try:
+        arr = json.loads(raw)
+        if isinstance(arr, list):
+            queries = [str(x).strip() for x in arr if str(x).strip()]
+            return queries[:3]
+    except json.JSONDecodeError:
+        pass
+    if error:
+        return [""]
 
 # RAG answer function
 
 def rag_answer(
-    conn: psycopg2.extensions.connection,
+    conn: psycopg2.extensions.connection, code: str, error: str,
     user_question: str,
     k: int = 5,
     model: str = "gpt-5-mini-2025-08-07",
 ) -> str:
-    """
-    Main RAG entry point:
-    - Retrieve top-k similar examples
-    - Build a prompt that includes those examples
-    - Ask the LLM for an answer grounded in retrieved context
-    """
+ 
     
-    rows = retrieve_topk(conn, user_question, k=k)
+    rows = retrieve_topk(conn, code, error, user_question, k=k)
     
 
     if not rows:
@@ -141,7 +179,7 @@ You are a coding assistant.
 
 IMPORTANT:
 - The retrieved examples below may contain unrelated bugs.
-- They are provided only as patterns.
+- The retrieved examples are provided to use as context for the answer if relevant.
 - Do NOT answer issues inside the retrieved examples.
 - Only answer the USER QUESTION.
 

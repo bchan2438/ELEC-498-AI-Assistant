@@ -1,5 +1,6 @@
 -- PGvector extension 
 CREATE EXTENSION IF NOT EXISTS vector;
+DROP TABLE IF EXISTS swebench_data;
 CREATE TABLE IF NOT EXISTS swebench_data(
 id BIGSERIAL PRIMARY KEY, 
 

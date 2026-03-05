@@ -38,7 +38,7 @@ def run_schema(conn):
 
 def load_swebench(split):
     # Load lite database 
-    sbl = load_dataset('SWE-bench/SWE-bench_Lite', split=split)
+    sbl = load_dataset('SWE-bench/SWE-bench_Verified', split=split)
     
     return sbl
 
@@ -49,7 +49,7 @@ def make_embedding_text(row: dict) -> str:
 
 
 #function to transform raw data in to a easily manipulated state 
-def transform_dataset(sbl, limit=300):
+def transform_dataset(sbl, limit=500):
     for i, row in enumerate(sbl):
         if i >= limit:
             break

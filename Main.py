@@ -1,5 +1,5 @@
 import sys
-from Database_Code.ingest_data import connection
+from Database_Code.ingest_data import connection, insert_data, run_schema
 from LLM_Code.llm import rag_answer
 
 def main():
@@ -8,6 +8,7 @@ def main():
     # sys.argv[2] = stderr/error string
     # sys.argv[3] = comma-separated error line numbers
     # sys.argv[4] = path to output file to write LLM response to
+    
 
     if len(sys.argv) >= 5:
         # Called from the VS Code extension
@@ -21,7 +22,7 @@ def main():
         question = f"The following Python code has an error:\n\n{code}\n\nError:\n{error}\n\nError on lines: {line_nums}\n\nPlease explain the error and suggest a fix."
 
         conn = connection()
-        result = rag_answer(conn, question)
+        result = rag_answer(conn, code, error, question)
         conn.close()
 
         with open(out_file, 'w') as f:
@@ -31,12 +32,16 @@ def main():
         # Called directly from the terminal (original behaviour)
         conn = connection()
         question = """from typing import List, TypeVar
-...your test question here..."""
+        ...your test question here..."""
         print(rag_answer(conn, question))
+    
         conn.close()
 
+
+
+
 def grab_database(conn):
-    from Database_Code.ingest_data import insert_data
+    run_schema(conn)
     insert_data(conn, "test")
 
 if __name__ == "__main__":
