@@ -193,6 +193,3 @@ Provide an explanation of the issues, one best practice corrected code.
 """
    
     return call_llm(prompt, model=model)
-
-
-

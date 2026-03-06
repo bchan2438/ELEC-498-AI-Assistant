@@ -1,0 +1,98 @@
+[
+  {
+    "id": "case_1",
+    "code": "from django.core.paginator import Paginator\n\nitems = [1, 2, 3]\np = Paginator(items, 2)\nprint(p.page(5).object_list)",
+    "error": "EmptyPage: That page contains no results",
+    "line_nums": "5",
+    "expected_category": "django_paginator_invalid_page",
+    "expected_keywords": ["invalid page", "page out of range", "handle EmptyPage"]
+  },
+  {
+    "id": "case_2",
+    "code": "from django.utils.dateformat import format\nfrom datetime import datetime\n\nvalue = datetime(99, 1, 1)\nprint(format(value, 'y'))",
+    "error": "Unexpected formatting output for year less than 1000",
+    "line_nums": "5",
+    "expected_category": "django_dateformat_edge_case",
+    "expected_keywords": ["year formatting", "leading zero", "dateformat"]
+  },
+  {
+    "id": "case_3",
+    "code": "import pytest\nfrom unittest.mock import patch\n\n@patch('math.sqrt', new=[1, 2, 3])\ndef test_demo(mock_obj):\n    assert True",
+    "error": "ValueError during pytest collection with patch object",
+    "line_nums": "4-6",
+    "expected_category": "pytest_patch_collection_issue",
+    "expected_keywords": ["pytest collection", "patch", "ValueError", "mock"]
+  },
+  {
+    "id": "case_4",
+    "code": "import pytest\n\n@pytest.mark.parametrize('data', [b'hello'])\ndef test_bytes(data):\n    assert data.startswith(b'h')",
+    "error": "BytesWarning shown during pytest setup or reporting",
+    "line_nums": "3-5",
+    "expected_category": "pytest_bytes_warning",
+    "expected_keywords": ["BytesWarning", "pytest", "reporting", "bytes parameter"]
+  },
+  {
+    "id": "case_5",
+    "code": "from sphinx.ext.autodoc.mock import _MockObject\nfrom typing import TypeVar\n\nT = TypeVar('T')\nobj = _MockObject()\nprint(obj + T)",
+    "error": "TypeError: can only concatenate str to str, not TypeVar",
+    "line_nums": "6",
+    "expected_category": "sphinx_autodoc_typeerror",
+    "expected_keywords": ["TypeError", "sphinx autodoc", "generic typed class", "mock"]
+  },
+  {
+    "id": "case_6",
+    "code": "import matplotlib.pyplot as plt\nimport math\n\nx = [1, 2, 3]\ny = [math.nan, math.nan, math.nan]\nplt.bar(x, y)\nplt.show()",
+    "error": "Exception raised when plotting all-NaN bar values",
+    "line_nums": "6-7",
+    "expected_category": "matplotlib_bar_nan_issue",
+    "expected_keywords": ["matplotlib", "bar", "all nan", "exception"]
+  },
+  {
+    "id": "case_7",
+    "code": "from sympy import Min\n\nprint(Min())",
+    "error": "ValueError: The Min function must have arguments",
+    "line_nums": "3",
+    "expected_category": "sympy_min_zero_args",
+    "expected_keywords": ["sympy", "Min", "ValueError", "must have arguments"]
+  },
+  {
+    "id": "case_8",
+    "code": "from sympy import Max\n\nprint(Max())",
+    "error": "ValueError: The Max function must have arguments",
+    "line_nums": "3",
+    "expected_category": "sympy_max_zero_args",
+    "expected_keywords": ["sympy", "Max", "ValueError", "must have arguments"]
+  },
+  {
+    "id": "case_9",
+    "code": "from sympy.tensor.array import Array\n\na = Array(5)\nprint(len(a))",
+    "error": "Incorrect length returned for rank-0 array",
+    "line_nums": "4",
+    "expected_category": "sympy_rank0_len_issue",
+    "expected_keywords": ["sympy", "rank-0", "len", "scalar array"]
+  },
+  {
+    "id": "case_10",
+    "code": "import xarray as xr\n\na = xr.DataArray([1, 2, 3], attrs={'unit': 'm'})\nb = xr.where(a > 1, a, 0)\nprint(b.attrs)",
+    "error": "Attributes unexpectedly lost after xr.where operation",
+    "line_nums": "4-5",
+    "expected_category": "xarray_where_attrs_loss",
+    "expected_keywords": ["xarray", "attrs", "where", "preserve attributes"]
+  },
+  {
+    "id": "case_11",
+    "code": "from sklearn.feature_selection import SequentialFeatureSelector\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import KFold\nimport numpy as np\n\nX = np.random.randn(20, 5)\ny = np.random.randn(20)\ncv = KFold(n_splits=5).split(X)\nsfs = SequentialFeatureSelector(LinearRegression(), cv=cv)\nsfs.fit(X, y)",
+    "error": "SequentialFeatureSelector fails when passing iterable splits",
+    "line_nums": "9-10",
+    "expected_category": "sklearn_sfs_cv_iterable_issue",
+    "expected_keywords": ["SequentialFeatureSelector", "iterable of splits", "cv", "fit failure"]
+  },
+  {
+    "id": "case_12",
+    "code": "from astropy.nddata import NDDataRef\nimport numpy as np\n\na = NDDataRef(np.array([1, 2, 3]), mask=np.array([True, False, False]))\nb = NDDataRef(np.array([4, 5, 6]))\nc = a.add(b)\nprint(c.mask)",
+    "error": "Mask propagation incorrect when one operand has no mask",
+    "line_nums": "6-7",
+    "expected_category": "astropy_mask_propagation",
+    "expected_keywords": ["astropy", "mask propagation", "operand has no mask", "NDDataRef"]
+  }
+]

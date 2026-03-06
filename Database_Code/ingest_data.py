@@ -44,8 +44,35 @@ def load_swebench(split):
 
 
 def make_embedding_text(row: dict) -> str:
+    repo = row.get("repo") or ""
     hint = row.get("hints_text") or ""
-    return f"{row['problem_statement']}\n\nHints:\n{hint}".strip()
+    fail_to_pass = row.get("FAIL_TO_PASS") or ""
+    pass_to_pass = row.get("PASS_TO_PASS") or ""
+    patch = row.get("patch") or ""
+    test_patch = row.get("test_patch") or ""
+
+    return f"""
+Repo:
+{repo}
+
+Problem statement:
+{row['problem_statement']}
+
+Hints:
+{hint}
+
+Fail to pass tests:
+{fail_to_pass}
+
+Pass to pass tests:
+{pass_to_pass}
+
+Patch:
+{patch[:2000]}
+
+Test patch:
+{test_patch[:1000]}
+""".strip()
 
 
 #function to transform raw data in to a easily manipulated state 

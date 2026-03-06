@@ -1,0 +1,492 @@
+[
+  {
+    "id": "case_101",
+    "expected_category": "django_paginator_invalid_page",
+    "expected_keywords": [
+      "invalid page",
+      "page out of range",
+      "handle EmptyPage"
+    ],
+    "retrieval_time_sec": 0.8005,
+    "answer_time_sec": 21.8961,
+    "retrieved": [],
+    "answer": "Cause:\nYou’re requesting a page number (5) that doesn’t exist in the paginator.\n\nWhy it happens:\nWith 3 items and per_page=2, the paginator creates 2 pages:\n- Page 1: [1, 2]\n- Page 2: [3]\nCalling p.page(5) raises EmptyPage because 5 > p.num_pages (which is 2).\n\nFix:\nRequest a valid page number or handle out-of-range requests. Use get_page (which clamps to the last page) or catch EmptyPage and fall back to a valid page.\n\nCorrected code:\nfrom django.core.paginator import Paginator\n\nitems = [1, 2, 3]\np = Paginator(items, 2)\n\n# Safely get a page; out-of-range returns the last page\npage = p.get_page(5)\nprint(page.object_list)  # Outputs: [3]"
+  },
+  {
+    "id": "case_102",
+    "expected_category": "django_dateformat_edge_case",
+    "expected_keywords": [
+      "year formatting",
+      "leading zero",
+      "dateformat"
+    ],
+    "retrieval_time_sec": 0.4157,
+    "answer_time_sec": 49.6253,
+    "retrieved": [],
+    "answer": "Cause:\nYou’re using Django’s dateformat code “y”, which returns a 2‑digit year. For a year less than 1000 (e.g., 0099), this drops the leading zeros and looks “unexpected.”\n\nWhy it happens:\nIn django.utils.dateformat, “y” means a 2‑digit year (00–99). “Y” is the 4‑digit, zero‑padded year. Also note that datetime(99, 1, 1) is the year 0099 AD, not 1999.\n\nFix:\nUse “Y” for a 4‑digit year. If you actually meant 1999, construct datetime(1999, 1, 1).\n\nCorrected code:\nfrom django.utils.dateformat import format\nfrom datetime import datetime\n\nvalue = datetime(99, 1, 1)  # year 0099\nprint(format(value, 'Y'))   # -> \"0099\""
+  },
+  {
+    "id": "case_103",
+    "expected_category": "pytest_patch_collection_issue",
+    "expected_keywords": [
+      "pytest collection",
+      "patch",
+      "ValueError",
+      "mock"
+    ],
+    "retrieval_time_sec": 0.354,
+    "answer_time_sec": 26.6814,
+    "retrieved": [
+      {
+        "instance_id": "pytest-dev__pytest-5631",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.41176476548700025,
+        "problem_statement_preview": "ValueError when collecting tests that patch an array \n<!--\r\nThanks for submitting an issue!\r\n\r\nHere's a quick checklist for what to provide:\r\n-->\r\n\r\nI'm trying to run pytest with a test file that contains patch where \"new\" is an array, for example:\r\n",
+        "patch_preview": "diff --git a/src/_pytest/compat.py b/src/_pytest/compat.py\n--- a/src/_pytest/compat.py\n+++ b/src/_pytest/compat.py\n@@ -64,13 +64,18 @@ def num_mock_patch_args(function):\n     patchings = getattr(function, \"patchings\", None)\n     if not patchings:\n   "
+      },
+      {
+        "instance_id": "pytest-dev__pytest-5787",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.5028550623145653,
+        "problem_statement_preview": "exception serialization should include chained exceptions\ngiven some simple tests:\r\n```\r\ndef test_chained_exception_with_from():\r\n    try:\r\n        try:\r\n            raise ValueError(11)\r\n        except Exception as e1:\r\n            raise ValueError(",
+        "patch_preview": "diff --git a/src/_pytest/reports.py b/src/_pytest/reports.py\n--- a/src/_pytest/reports.py\n+++ b/src/_pytest/reports.py\n@@ -3,6 +3,7 @@\n \n import py\n \n+from _pytest._code.code import ExceptionChainRepr\n from _pytest._code.code import ExceptionInfo\n fr"
+      },
+      {
+        "instance_id": "pytest-dev__pytest-6202",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.47192680835723877,
+        "problem_statement_preview": "'.['  replaced with '[' in the headline shown of the test report\n```\r\nbug.py F                                                                 [100%]\r\n\r\n=================================== FAILURES ===================================\r\n_______________",
+        "patch_preview": "diff --git a/src/_pytest/python.py b/src/_pytest/python.py\n--- a/src/_pytest/python.py\n+++ b/src/_pytest/python.py\n@@ -285,8 +285,7 @@ def getmodpath(self, stopatmodule=True, includemodule=False):\n                     break\n             parts.append("
+      },
+      {
+        "instance_id": "pytest-dev__pytest-6197",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.5256563142333209,
+        "problem_statement_preview": "Regression in 5.2.3: pytest tries to collect random __init__.py files\nThis was caught by our build server this morning.  It seems that pytest 5.2.3 tries to import any `__init__.py` file under the current directory. (We have some package that is only",
+        "patch_preview": "diff --git a/src/_pytest/python.py b/src/_pytest/python.py\n--- a/src/_pytest/python.py\n+++ b/src/_pytest/python.py\n@@ -251,21 +251,18 @@ class PyobjMixin(PyobjContext):\n     @property\n     def obj(self):\n         \"\"\"Underlying Python object.\"\"\"\n-    "
+      },
+      {
+        "instance_id": "pytest-dev__pytest-8399",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.5093673467636108,
+        "problem_statement_preview": "Starting v6.2.0, unittest setUpClass fixtures are no longer \"private\"\n<!--\r\nThanks for submitting an issue!\r\n\r\nQuick check-list while reporting bugs:\r\n-->\r\nMinimal example:\r\n```\r\nimport unittest\r\n\r\nclass Tests(unittest.TestCase):\r\n    @classmethod\r\n ",
+        "patch_preview": "diff --git a/src/_pytest/python.py b/src/_pytest/python.py\n--- a/src/_pytest/python.py\n+++ b/src/_pytest/python.py\n@@ -528,7 +528,7 @@ def _inject_setup_module_fixture(self) -> None:\n             autouse=True,\n             scope=\"module\",\n           "
+      }
+    ],
+    "answer": "Cause:\nYou used patch with the new argument but kept a mock parameter in the test function.\n\nWhy it happens:\nWhen patch is given new=..., it does not create a mock and therefore does not pass any extra argument to the decorated function. Pytest then treats mock_obj as a fixture name during collection, which causes a collection error (in some pytest versions this manifests as a ValueError while determining mock-argument counts).\n\nFix:\n- If you want to replace math.sqrt with a concrete object, remove the mock_obj parameter.\n- If you want a mock object injected, don’t pass new; use patch('math.sqrt') or use new_callable=MagicMock and keep the parameter.\n\nCorrected code:\nimport pytest\nfrom unittest.mock import patch\n\n@patch('math.sqrt', new=[1, 2, 3])\ndef test_demo():\n    assert True"
+  },
+  {
+    "id": "case_104",
+    "expected_category": "pytest_bytes_warning",
+    "expected_keywords": [
+      "BytesWarning",
+      "pytest",
+      "reporting",
+      "bytes parameter"
+    ],
+    "retrieval_time_sec": 0.2491,
+    "answer_time_sec": 59.2552,
+    "retrieved": [
+      {
+        "instance_id": "pytest-dev__pytest-7205",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.47505048066075917,
+        "problem_statement_preview": "BytesWarning when using --setup-show with bytes parameter\nWith Python 3.8.2, pytest 5.4.1 (or latest master; stacktraces are from there) and this file:\r\n\r\n```python\r\nimport pytest\r\n\r\n@pytest.mark.parametrize('data', [b'Hello World'])\r\ndef test_data(d",
+        "patch_preview": "diff --git a/src/_pytest/setuponly.py b/src/_pytest/setuponly.py\n--- a/src/_pytest/setuponly.py\n+++ b/src/_pytest/setuponly.py\n@@ -1,4 +1,5 @@\n import pytest\n+from _pytest._io.saferepr import saferepr\n \n \n def pytest_addoption(parser):\n@@ -66,7 +67,7"
+      },
+      {
+        "instance_id": "pytest-dev__pytest-5809",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.5093448004712289,
+        "problem_statement_preview": "Lexer \"python3\" in --pastebin feature causes HTTP errors\nThe `--pastebin` option currently submits the output of `pytest` to `bpaste.net` using `lexer=python3`: https://github.com/pytest-dev/pytest/blob/d47b9d04d4cf824150caef46c9c888779c1b3f58/src/_p",
+        "patch_preview": "diff --git a/src/_pytest/pastebin.py b/src/_pytest/pastebin.py\n--- a/src/_pytest/pastebin.py\n+++ b/src/_pytest/pastebin.py\n@@ -77,11 +77,7 @@ def create_new_paste(contents):\n         from urllib.request import urlopen\n         from urllib.parse impor"
+      },
+      {
+        "instance_id": "pytest-dev__pytest-8399",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.5245613426492963,
+        "problem_statement_preview": "Starting v6.2.0, unittest setUpClass fixtures are no longer \"private\"\n<!--\r\nThanks for submitting an issue!\r\n\r\nQuick check-list while reporting bugs:\r\n-->\r\nMinimal example:\r\n```\r\nimport unittest\r\n\r\nclass Tests(unittest.TestCase):\r\n    @classmethod\r\n ",
+        "patch_preview": "diff --git a/src/_pytest/python.py b/src/_pytest/python.py\n--- a/src/_pytest/python.py\n+++ b/src/_pytest/python.py\n@@ -528,7 +528,7 @@ def _inject_setup_module_fixture(self) -> None:\n             autouse=True,\n             scope=\"module\",\n           "
+      },
+      {
+        "instance_id": "pytest-dev__pytest-5787",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.53621619292208,
+        "problem_statement_preview": "exception serialization should include chained exceptions\ngiven some simple tests:\r\n```\r\ndef test_chained_exception_with_from():\r\n    try:\r\n        try:\r\n            raise ValueError(11)\r\n        except Exception as e1:\r\n            raise ValueError(",
+        "patch_preview": "diff --git a/src/_pytest/reports.py b/src/_pytest/reports.py\n--- a/src/_pytest/reports.py\n+++ b/src/_pytest/reports.py\n@@ -3,6 +3,7 @@\n \n import py\n \n+from _pytest._code.code import ExceptionChainRepr\n from _pytest._code.code import ExceptionInfo\n fr"
+      },
+      {
+        "instance_id": "pytest-dev__pytest-6202",
+        "repo": "pytest-dev/pytest",
+        "distance": 0.559670739213137,
+        "problem_statement_preview": "'.['  replaced with '[' in the headline shown of the test report\n```\r\nbug.py F                                                                 [100%]\r\n\r\n=================================== FAILURES ===================================\r\n_______________",
+        "patch_preview": "diff --git a/src/_pytest/python.py b/src/_pytest/python.py\n--- a/src/_pytest/python.py\n+++ b/src/_pytest/python.py\n@@ -285,8 +285,7 @@ def getmodpath(self, stopatmodule=True, includemodule=False):\n                     break\n             parts.append("
+      }
+    ],
+    "answer": "Cause:\npytest is trying to format a bytes parameter as a string during setup/reporting (for example with --setup-show). With Python run using -bb, calling str() on a bytes object triggers a BytesWarning.\n\nWhy it happens:\nOlder pytest versions used \"{}\".format(param) (i.e., str(param)) when showing cached_param for parameterized fixtures. If the parameter is bytes (b'hello'), Python raises BytesWarning under -bb for str(bytes). This is a pytest reporting bug, not an issue with your test logic.\n\nFix:\n- Best: Upgrade pytest to a version that uses saferepr for parameters in setup output (the bug was fixed upstream). After upgrading, bytes params won’t trigger BytesWarning in reporting.\n- Workarounds if you can’t upgrade:\n  - Avoid using --setup-show together with -bb.\n  - Provide a text id for the parameter so test names don’t require stringifying the bytes value (helps naming; the warning can still appear with --setup-show on old pytest).\n\nCorrected code:\nimport pytest\n\n@pytest.mark.parametrize('data', [pytest.param(b'hello', id='hello-bytes')])\ndef test_bytes(data):\n    assert data.startswith(b'h')"
+  },
+  {
+    "id": "case_105",
+    "expected_category": "sphinx_autodoc_typeerror",
+    "expected_keywords": [
+      "TypeError",
+      "sphinx autodoc",
+      "generic typed class",
+      "mock"
+    ],
+    "retrieval_time_sec": 1.1293,
+    "answer_time_sec": 28.5414,
+    "retrieved": [
+      {
+        "instance_id": "sphinx-doc__sphinx-9658",
+        "repo": "sphinx-doc/sphinx",
+        "distance": 0.4425688190635161,
+        "problem_statement_preview": "Inherited classes not correctly documented when mocked\n### Describe the bug\r\n\r\nWe're experiencing an issue when documenting classes that inherit mocked classes. However, classes which inherit other classes from our own package are ok.\r\n\r\nThis issue a",
+        "patch_preview": "diff --git a/sphinx/ext/autodoc/mock.py b/sphinx/ext/autodoc/mock.py\n--- a/sphinx/ext/autodoc/mock.py\n+++ b/sphinx/ext/autodoc/mock.py\n@@ -26,6 +26,7 @@ class _MockObject:\n     \"\"\"Used by autodoc_mock_imports.\"\"\"\n \n     __display_name__ = '_MockObjec"
+      },
+      {
+        "instance_id": "sphinx-doc__sphinx-9229",
+        "repo": "sphinx-doc/sphinx",
+        "distance": 0.53589755082741,
+        "problem_statement_preview": "Inconsistent behaviour with type alias documentation (not overwriting all the default messages, just some)\n**Describe the bug**\r\nHello, I have 3 muiltiline docstrings for type aliases (using the next-line `\"\"\"` documentation syntax). For 1 one them t",
+        "patch_preview": "diff --git a/sphinx/ext/autodoc/__init__.py b/sphinx/ext/autodoc/__init__.py\n--- a/sphinx/ext/autodoc/__init__.py\n+++ b/sphinx/ext/autodoc/__init__.py\n@@ -1676,7 +1676,11 @@ def get_object_members(self, want_all: bool) -> Tuple[bool, ObjectMembers]:\n"
+      },
+      {
+        "instance_id": "django__django-17087",
+        "repo": "django/django",
+        "distance": 0.6629953585269828,
+        "problem_statement_preview": "Class methods from nested classes cannot be used as Field.default.\nDescription\n\t \n\t\t(last modified by Mariusz Felisiak)\n\t \nGiven the following model:\n \nclass Profile(models.Model):\n\tclass Capability(models.TextChoices):\n\t\tBASIC = (\"BASIC\", \"Basic\")\n\t",
+        "patch_preview": "diff --git a/django/db/migrations/serializer.py b/django/db/migrations/serializer.py\n--- a/django/db/migrations/serializer.py\n+++ b/django/db/migrations/serializer.py\n@@ -168,7 +168,7 @@ def serialize(self):\n         ):\n             klass = self.valu"
+      },
+      {
+        "instance_id": "pydata__xarray-7393",
+        "repo": "pydata/xarray",
+        "distance": 0.6781333876768709,
+        "problem_statement_preview": "stack casts int32 dtype coordinate to int64\n### What happened?\n\nThe code example below results in `False`, because the data type of the `a` coordinate is changed from 'i4' to 'i8'.\n\n### What did you expect to happen?\n\nI expect the result to be `True`",
+        "patch_preview": "diff --git a/xarray/core/indexing.py b/xarray/core/indexing.py\n--- a/xarray/core/indexing.py\n+++ b/xarray/core/indexing.py\n@@ -1531,8 +1531,12 @@ def __init__(\n         self.level = level\n \n     def __array__(self, dtype: DTypeLike = None) -> np.ndar"
+      },
+      {
+        "instance_id": "scikit-learn__scikit-learn-13779",
+        "repo": "scikit-learn/scikit-learn",
+        "distance": 0.7410663973013881,
+        "problem_statement_preview": "Voting estimator will fail at fit if weights are passed and an estimator is None\nBecause we don't check for an estimator to be `None` in `sample_weight` support, `fit` is failing`.\r\n\r\n```python\r\n    X, y = load_iris(return_X_y=True)\r\n    voter = Voti",
+        "patch_preview": "diff --git a/sklearn/ensemble/voting.py b/sklearn/ensemble/voting.py\n--- a/sklearn/ensemble/voting.py\n+++ b/sklearn/ensemble/voting.py\n@@ -78,6 +78,8 @@ def fit(self, X, y, sample_weight=None):\n \n         if sample_weight is not None:\n             fo"
+      }
+    ],
+    "answer": "Cause:\nYou’re adding a Sphinx internal mock object (_MockObject) to a typing.TypeVar. _MockObject overloads the + operator as string concatenation and expects the right-hand side to be a string.\n\nWhy it happens:\nInside _MockObject.__add__, Sphinx effectively does '' + other to mimic string behavior. When other is a TypeVar, Python raises “can only concatenate str (not 'TypeVar') to str”, which is the TypeError you see on line 6.\n\nFix:\n- Don’t use _MockObject for runtime operations; it’s a private Sphinx helper.\n- If you just want to concatenate for display, convert operands to strings.\n- Or avoid + entirely and print them separately.\n\nCorrected code:\nfrom sphinx.ext.autodoc.mock import _MockObject\nfrom typing import TypeVar\n\nT = TypeVar('T')\nobj = _MockObject()\nprint(f\"{obj}{T}\")  # or: print(str(obj) + str(T)) or: print(obj, T)"
+  },
+  {
+    "id": "case_106",
+    "expected_category": "matplotlib_bar_nan_issue",
+    "expected_keywords": [
+      "matplotlib",
+      "bar",
+      "all nan",
+      "exception"
+    ],
+    "retrieval_time_sec": 0.2422,
+    "answer_time_sec": 30.8736,
+    "retrieved": [],
+    "answer": "Cause:\nAll bar heights (y values) are NaN, so Matplotlib has no finite data to autoscale the y-axis.\n\nWhy it happens:\nWhen drawing the plot (at plt.show()), Matplotlib tries to compute axis limits from the finite data. With only NaNs, it can’t find a valid range, which triggers an exception during autoscaling.\n\nFix:\nProvide at least one finite bar height. Either replace NaNs with zeros (or another value), or drop the NaN entries before plotting. Replacing with zeros is the simplest.\n\nCorrected code:\nimport matplotlib.pyplot as plt\nimport math\n\nx = [1, 2, 3]\ny = [math.nan, math.nan, math.nan]\n\n# Replace NaNs with zeros (or filter them out)\ny = [0 if math.isnan(v) else v for v in y]\n\nplt.bar(x, y)\nplt.show()"
+  },
+  {
+    "id": "case_107",
+    "expected_category": "sympy_min_zero_args",
+    "expected_keywords": [
+      "sympy",
+      "Min",
+      "ValueError",
+      "must have arguments"
+    ],
+    "retrieval_time_sec": 0.3518,
+    "answer_time_sec": 29.6656,
+    "retrieved": [
+      {
+        "instance_id": "scikit-learn__scikit-learn-25747",
+        "repo": "scikit-learn/scikit-learn",
+        "distance": 0.816975612460113,
+        "problem_statement_preview": "FeatureUnion not working when aggregating data and pandas transform output selected\n### Describe the bug\n\nI would like to use `pandas` transform output and use a custom transformer in a feature union which aggregates data. When I'm using this combina",
+        "patch_preview": "diff --git a/sklearn/utils/_set_output.py b/sklearn/utils/_set_output.py\n--- a/sklearn/utils/_set_output.py\n+++ b/sklearn/utils/_set_output.py\n@@ -34,7 +34,7 @@ def _wrap_in_pandas_container(\n         `range(n_features)`.\n \n     index : array-like, d"
+      },
+      {
+        "instance_id": "django__django-15277",
+        "repo": "django/django",
+        "distance": 0.7274610237753997,
+        "problem_statement_preview": "Micro-optimisation for Value._resolve_output_field (by modifying CharField.__init__)\nDescription\n\t\nCurrently, when you do something like annotate(x=Value('test')) that will eventually probably call down into Value._resolve_output_field() and run the ",
+        "patch_preview": "diff --git a/django/db/models/fields/__init__.py b/django/db/models/fields/__init__.py\n--- a/django/db/models/fields/__init__.py\n+++ b/django/db/models/fields/__init__.py\n@@ -1010,7 +1010,8 @@ class CharField(Field):\n     def __init__(self, *args, db"
+      },
+      {
+        "instance_id": "scikit-learn__scikit-learn-9288",
+        "repo": "scikit-learn/scikit-learn",
+        "distance": 0.7397990071653724,
+        "problem_statement_preview": "KMeans gives slightly different result for n_jobs=1 vs. n_jobs > 1\n<!--\r\nIf your issue is a usage question, submit it here instead:\r\n- StackOverflow with the scikit-learn tag: http://stackoverflow.com/questions/tagged/scikit-learn\r\n- Mailing List: ht",
+        "patch_preview": "diff --git a/sklearn/cluster/k_means_.py b/sklearn/cluster/k_means_.py\n--- a/sklearn/cluster/k_means_.py\n+++ b/sklearn/cluster/k_means_.py\n@@ -360,16 +360,18 @@ def k_means(X, n_clusters, sample_weight=None, init='k-means++',\n     else:\n         rais"
+      },
+      {
+        "instance_id": "django__django-11603",
+        "repo": "django/django",
+        "distance": 0.7593150221689065,
+        "problem_statement_preview": "Add DISTINCT support for Avg and Sum aggregates.\nDescription\n\t\nAs an extension of #28658, aggregates should be supported for other general aggregates such as Avg and Sum. Before 2.2, these aggregations just ignored the parameter, but now throw an exc",
+        "patch_preview": "diff --git a/django/db/models/aggregates.py b/django/db/models/aggregates.py\n--- a/django/db/models/aggregates.py\n+++ b/django/db/models/aggregates.py\n@@ -99,6 +99,7 @@ def _get_repr_options(self):\n class Avg(FixDurationInputMixin, NumericOutputField"
+      },
+      {
+        "instance_id": "django__django-15375",
+        "repo": "django/django",
+        "distance": 0.7564592369150206,
+        "problem_statement_preview": "aggregate() with 'default' after annotate() crashes.\nDescription\n\t\nI saw this on a PostgreSQL project and reproduced it with SQLite. Django 4.0.1.\nAnnotate (anything) then aggregate works fine:\n$ ./manage.py shell\nPython 3.10.2 (main, Jan 21 2022, 19",
+        "patch_preview": "diff --git a/django/db/models/aggregates.py b/django/db/models/aggregates.py\n--- a/django/db/models/aggregates.py\n+++ b/django/db/models/aggregates.py\n@@ -65,7 +65,9 @@ def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize\n"
+      }
+    ],
+    "answer": "Cause:\nYou called sympy.Min() with no arguments.\n\nWhy it happens:\nSymPy’s Min is a symbolic minimum function that requires at least one expression/number to compare. With zero arguments there’s nothing to minimize, so it raises ValueError.\n\nFix:\nPass one or more arguments to Min, or unpack a non-empty iterable. If your data might be empty, handle that case before calling Min.\n\nCorrected code:\nfrom sympy import Min\n\nvalues = [3, 1, 4]\nprint(Min(*values))  # prints 1"
+  },
+  {
+    "id": "case_108",
+    "expected_category": "sympy_max_zero_args",
+    "expected_keywords": [
+      "sympy",
+      "Max",
+      "ValueError",
+      "must have arguments"
+    ],
+    "retrieval_time_sec": 0.3416,
+    "answer_time_sec": 22.5254,
+    "retrieved": [
+      {
+        "instance_id": "django__django-15277",
+        "repo": "django/django",
+        "distance": 0.6834170709003758,
+        "problem_statement_preview": "Micro-optimisation for Value._resolve_output_field (by modifying CharField.__init__)\nDescription\n\t\nCurrently, when you do something like annotate(x=Value('test')) that will eventually probably call down into Value._resolve_output_field() and run the ",
+        "patch_preview": "diff --git a/django/db/models/fields/__init__.py b/django/db/models/fields/__init__.py\n--- a/django/db/models/fields/__init__.py\n+++ b/django/db/models/fields/__init__.py\n@@ -1010,7 +1010,8 @@ class CharField(Field):\n     def __init__(self, *args, db"
+      },
+      {
+        "instance_id": "scikit-learn__scikit-learn-25747",
+        "repo": "scikit-learn/scikit-learn",
+        "distance": 0.8175868053682559,
+        "problem_statement_preview": "FeatureUnion not working when aggregating data and pandas transform output selected\n### Describe the bug\n\nI would like to use `pandas` transform output and use a custom transformer in a feature union which aggregates data. When I'm using this combina",
+        "patch_preview": "diff --git a/sklearn/utils/_set_output.py b/sklearn/utils/_set_output.py\n--- a/sklearn/utils/_set_output.py\n+++ b/sklearn/utils/_set_output.py\n@@ -34,7 +34,7 @@ def _wrap_in_pandas_container(\n         `range(n_features)`.\n \n     index : array-like, d"
+      },
+      {
+        "instance_id": "django__django-11603",
+        "repo": "django/django",
+        "distance": 0.7463374511498962,
+        "problem_statement_preview": "Add DISTINCT support for Avg and Sum aggregates.\nDescription\n\t\nAs an extension of #28658, aggregates should be supported for other general aggregates such as Avg and Sum. Before 2.2, these aggregations just ignored the parameter, but now throw an exc",
+        "patch_preview": "diff --git a/django/db/models/aggregates.py b/django/db/models/aggregates.py\n--- a/django/db/models/aggregates.py\n+++ b/django/db/models/aggregates.py\n@@ -99,6 +99,7 @@ def _get_repr_options(self):\n class Avg(FixDurationInputMixin, NumericOutputField"
+      },
+      {
+        "instance_id": "scikit-learn__scikit-learn-9288",
+        "repo": "scikit-learn/scikit-learn",
+        "distance": 0.7739547327783859,
+        "problem_statement_preview": "KMeans gives slightly different result for n_jobs=1 vs. n_jobs > 1\n<!--\r\nIf your issue is a usage question, submit it here instead:\r\n- StackOverflow with the scikit-learn tag: http://stackoverflow.com/questions/tagged/scikit-learn\r\n- Mailing List: ht",
+        "patch_preview": "diff --git a/sklearn/cluster/k_means_.py b/sklearn/cluster/k_means_.py\n--- a/sklearn/cluster/k_means_.py\n+++ b/sklearn/cluster/k_means_.py\n@@ -360,16 +360,18 @@ def k_means(X, n_clusters, sample_weight=None, init='k-means++',\n     else:\n         rais"
+      },
+      {
+        "instance_id": "django__django-15375",
+        "repo": "django/django",
+        "distance": 0.7540746480226499,
+        "problem_statement_preview": "aggregate() with 'default' after annotate() crashes.\nDescription\n\t\nI saw this on a PostgreSQL project and reproduced it with SQLite. Django 4.0.1.\nAnnotate (anything) then aggregate works fine:\n$ ./manage.py shell\nPython 3.10.2 (main, Jan 21 2022, 19",
+        "patch_preview": "diff --git a/django/db/models/aggregates.py b/django/db/models/aggregates.py\n--- a/django/db/models/aggregates.py\n+++ b/django/db/models/aggregates.py\n@@ -65,7 +65,9 @@ def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize\n"
+      }
+    ],
+    "answer": "Cause:\nYou called SymPy’s Max with no arguments.\n\nWhy it happens:\nSymPy’s Max is a symbolic function that requires at least one expression to compute a maximum. There’s no default “neutral” value for an empty argument list, so calling Max() raises ValueError.\n\nFix:\nPass one or more arguments. If you have an iterable, unpack it with *. If the iterable may be empty, handle that case before calling Max (e.g., check length or provide a fallback).\n\nCorrected code:\nfrom sympy import Max\n\nvalues = [1, 5, 3]\nprint(Max(*values))"
+  },
+  {
+    "id": "case_109",
+    "expected_category": "sympy_rank0_len_issue",
+    "expected_keywords": [
+      "sympy",
+      "rank-0",
+      "len",
+      "scalar array"
+    ],
+    "retrieval_time_sec": 0.3375,
+    "answer_time_sec": 38.2856,
+    "retrieved": [
+      {
+        "instance_id": "scikit-learn__scikit-learn-9288",
+        "repo": "scikit-learn/scikit-learn",
+        "distance": 0.7152940630912781,
+        "problem_statement_preview": "KMeans gives slightly different result for n_jobs=1 vs. n_jobs > 1\n<!--\r\nIf your issue is a usage question, submit it here instead:\r\n- StackOverflow with the scikit-learn tag: http://stackoverflow.com/questions/tagged/scikit-learn\r\n- Mailing List: ht",
+        "patch_preview": "diff --git a/sklearn/cluster/k_means_.py b/sklearn/cluster/k_means_.py\n--- a/sklearn/cluster/k_means_.py\n+++ b/sklearn/cluster/k_means_.py\n@@ -360,16 +360,18 @@ def k_means(X, n_clusters, sample_weight=None, init='k-means++',\n     else:\n         rais"
+      },
+      {
+        "instance_id": "django__django-15375",
+        "repo": "django/django",
+        "distance": 0.7441887703054406,
+        "problem_statement_preview": "aggregate() with 'default' after annotate() crashes.\nDescription\n\t\nI saw this on a PostgreSQL project and reproduced it with SQLite. Django 4.0.1.\nAnnotate (anything) then aggregate works fine:\n$ ./manage.py shell\nPython 3.10.2 (main, Jan 21 2022, 19",
+        "patch_preview": "diff --git a/django/db/models/aggregates.py b/django/db/models/aggregates.py\n--- a/django/db/models/aggregates.py\n+++ b/django/db/models/aggregates.py\n@@ -65,7 +65,9 @@ def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize\n"
+      },
+      {
+        "instance_id": "django__django-11603",
+        "repo": "django/django",
+        "distance": 0.7165368114869834,
+        "problem_statement_preview": "Add DISTINCT support for Avg and Sum aggregates.\nDescription\n\t\nAs an extension of #28658, aggregates should be supported for other general aggregates such as Avg and Sum. Before 2.2, these aggregations just ignored the parameter, but now throw an exc",
+        "patch_preview": "diff --git a/django/db/models/aggregates.py b/django/db/models/aggregates.py\n--- a/django/db/models/aggregates.py\n+++ b/django/db/models/aggregates.py\n@@ -99,6 +99,7 @@ def _get_repr_options(self):\n class Avg(FixDurationInputMixin, NumericOutputField"
+      },
+      {
+        "instance_id": "scikit-learn__scikit-learn-25747",
+        "repo": "scikit-learn/scikit-learn",
+        "distance": 0.8122515380382538,
+        "problem_statement_preview": "FeatureUnion not working when aggregating data and pandas transform output selected\n### Describe the bug\n\nI would like to use `pandas` transform output and use a custom transformer in a feature union which aggregates data. When I'm using this combina",
+        "patch_preview": "diff --git a/sklearn/utils/_set_output.py b/sklearn/utils/_set_output.py\n--- a/sklearn/utils/_set_output.py\n+++ b/sklearn/utils/_set_output.py\n@@ -34,7 +34,7 @@ def _wrap_in_pandas_container(\n         `range(n_features)`.\n \n     index : array-like, d"
+      },
+      {
+        "instance_id": "pydata__xarray-7233",
+        "repo": "pydata/xarray",
+        "distance": 0.7496151775351056,
+        "problem_statement_preview": "ds.Coarsen.construct demotes non-dimensional coordinates to variables\n### What happened?\n\n`ds.Coarsen.construct` demotes non-dimensional coordinates to variables\n\n### What did you expect to happen?\n\nAll variables that were coordinates before the coar",
+        "patch_preview": "diff --git a/xarray/core/rolling.py b/xarray/core/rolling.py\n--- a/xarray/core/rolling.py\n+++ b/xarray/core/rolling.py\n@@ -973,7 +973,10 @@ def construct(\n             else:\n                 reshaped[key] = var\n \n-        should_be_coords = set(windo"
+      }
+    ],
+    "answer": "Cause:\nYou created a rank-0 (0‑dimensional) SymPy Array by calling Array(5) and then tried to take its length with len(a).\n\nWhy it happens:\nArray(5) treats 5 as a scalar and returns a rank-0 array, which has no first axis. len() is defined as the length of the first dimension, so for a rank-0 array it’s undefined and SymPy raises an error.\n\nFix:\n- If you want the number of elements regardless of dimensionality, use a.size (it will be 1 for a scalar).\n- If you intended a 1D array with one element, construct it as Array([5]) and then len() will work.\n\nCorrected code:\nfrom sympy.tensor.array import Array\n\na = Array([5])  # make it a 1D array\nprint(len(a))  # prints 1"
+  },
+  {
+    "id": "case_110",
+    "expected_category": "xarray_where_attrs_loss",
+    "expected_keywords": [
+      "xarray",
+      "attrs",
+      "where",
+      "preserve attributes"
+    ],
+    "retrieval_time_sec": 0.2929,
+    "answer_time_sec": 26.3767,
+    "retrieved": [
+      {
+        "instance_id": "pydata__xarray-7229",
+        "repo": "pydata/xarray",
+        "distance": 0.4501461118372603,
+        "problem_statement_preview": "`xr.where(..., keep_attrs=True)` overwrites coordinate attributes\n### What happened?\n\n#6461 had some unintended consequences for `xr.where(..., keep_attrs=True)`, where coordinate attributes are getting overwritten by variable attributes. I guess thi",
+        "patch_preview": "diff --git a/xarray/core/computation.py b/xarray/core/computation.py\n--- a/xarray/core/computation.py\n+++ b/xarray/core/computation.py\n@@ -1855,15 +1855,13 @@ def where(cond, x, y, keep_attrs=None):\n     Dataset.where, DataArray.where :\n         equi"
+      },
+      {
+        "instance_id": "pydata__xarray-4695",
+        "repo": "pydata/xarray",
+        "distance": 0.5552531149832529,
+        "problem_statement_preview": "Naming a dimension \"method\" throws error when calling \".loc\"\n#### Code Sample, a copy-pastable example if possible\r\n\r\n```python\r\nimport numpy as np\r\nfrom xarray import DataArray\r\nempty = np.zeros((2,2))\r\nD1 = DataArray(empty, dims=['dim1', 'dim2'],  ",
+        "patch_preview": "diff --git a/xarray/core/dataarray.py b/xarray/core/dataarray.py\n--- a/xarray/core/dataarray.py\n+++ b/xarray/core/dataarray.py\n@@ -196,7 +196,7 @@ def __getitem__(self, key) -> \"DataArray\":\n             # expand the indexer so we can handle Ellipsis\n"
+      },
+      {
+        "instance_id": "pydata__xarray-3305",
+        "repo": "pydata/xarray",
+        "distance": 0.6321604094314087,
+        "problem_statement_preview": "DataArray.quantile does not honor `keep_attrs`\n#### MCVE Code Sample\r\n<!-- In order for the maintainers to efficiently understand and prioritize issues, we ask you post a \"Minimal, Complete and Verifiable Example\" (MCVE): http://matthewrocklin.com/bl",
+        "patch_preview": "diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py\n--- a/xarray/core/dataset.py\n+++ b/xarray/core/dataset.py\n@@ -4768,7 +4768,10 @@ def quantile(\n                             # the former is often more efficient\n                            "
+      },
+      {
+        "instance_id": "scikit-learn__scikit-learn-25931",
+        "repo": "scikit-learn/scikit-learn",
+        "distance": 0.6441249251365636,
+        "problem_statement_preview": "X does not have valid feature names, but IsolationForest was fitted with feature names\n### Describe the bug\r\n\r\nIf you fit an `IsolationForest` using a `pd.DataFrame` it generates a warning\r\n\r\n``` python\r\nX does not have valid feature names, but Isola",
+        "patch_preview": "diff --git a/sklearn/ensemble/_iforest.py b/sklearn/ensemble/_iforest.py\n--- a/sklearn/ensemble/_iforest.py\n+++ b/sklearn/ensemble/_iforest.py\n@@ -344,8 +344,10 @@ def fit(self, X, y=None, sample_weight=None):\n             self.offset_ = -0.5\n       "
+      },
+      {
+        "instance_id": "astropy__astropy-13579",
+        "repo": "astropy/astropy",
+        "distance": 0.6894623709365879,
+        "problem_statement_preview": "Inconsistent behavior of `world_to_pixel` in `SlicedLowLevelWCS` \n<!-- This comments are hidden when you submit the issue,\r\nso you do not need to remove them! -->\r\n\r\n<!-- Please be sure to check out our contributing guidelines,\r\nhttps://github.com/as",
+        "patch_preview": "diff --git a/astropy/wcs/wcsapi/wrappers/sliced_wcs.py b/astropy/wcs/wcsapi/wrappers/sliced_wcs.py\n--- a/astropy/wcs/wcsapi/wrappers/sliced_wcs.py\n+++ b/astropy/wcs/wcsapi/wrappers/sliced_wcs.py\n@@ -243,6 +243,8 @@ def pixel_to_world_values(self, *pi"
+      }
+    ],
+    "answer": "Cause:\nxarray drops attributes by default during computations. Your call to xr.where does not request attribute preservation, so the resulting DataArray loses attrs.\n\nWhy it happens:\nxr.where has a keep_attrs parameter that defaults to False (via global options). Unless you pass keep_attrs=True (or set a global option), the function returns a new object without copying attrs from the inputs.\n\nFix:\n- Pass keep_attrs=True to xr.where, or\n- Use the DataArray method a.where(..., keep_attrs=True), or\n- Set a global option xr.set_options(keep_attrs=True) if you want this behavior everywhere.\n\nCorrected code:\nimport xarray as xr\n\na = xr.DataArray([1, 2, 3], attrs={'unit': 'm'})\nb = xr.where(a > 1, a, 0, keep_attrs=True)\nprint(b.attrs)  # {'unit': 'm'}"
+  },
+  {
+    "id": "case_111",
+    "expected_category": "sklearn_sfs_cv_iterable_issue",
+    "expected_keywords": [
+      "SequentialFeatureSelector",
+      "iterable of splits",
+      "cv",
+      "fit failure"
+    ],
+    "retrieval_time_sec": 0.3737,
+    "answer_time_sec": 27.0796,
+    "retrieved": [
+      {
+        "instance_id": "django__django-13569",
+        "repo": "django/django",
+        "distance": 0.6871110014385576,
+        "problem_statement_preview": "order_by('?') unexpectedly breaking queryset aggregation\nDescription\n\t\nSteps to reproduce:\nclass Thing(models.Model):\n\tpass\nclass Related(models.Model):\n\tmodels.ForeignKey(Thing)\nWith data\nt = Thing.objects.create()\nrs = [Related.objects.create(thing",
+        "patch_preview": "diff --git a/django/db/models/functions/math.py b/django/db/models/functions/math.py\n--- a/django/db/models/functions/math.py\n+++ b/django/db/models/functions/math.py\n@@ -154,6 +154,9 @@ def as_oracle(self, compiler, connection, **extra_context):\n   "
+      },
+      {
+        "instance_id": "django__django-13964",
+        "repo": "django/django",
+        "distance": 0.7087207014131123,
+        "problem_statement_preview": "Saving parent object after setting on child leads to data loss for parents with non-numeric primary key.\nDescription\n\t \n\t\t(last modified by Charlie DeTar)\n\t \nGiven a model with a foreign key relation to another model that has a non-auto CharField as ",
+        "patch_preview": "diff --git a/django/db/models/base.py b/django/db/models/base.py\n--- a/django/db/models/base.py\n+++ b/django/db/models/base.py\n@@ -933,7 +933,7 @@ def _prepare_related_fields_for_save(self, operation_name):\n                         \"%s() prohibited t"
+      },
+      {
+        "instance_id": "django__django-13925",
+        "repo": "django/django",
+        "distance": 0.7032357212024046,
+        "problem_statement_preview": "models.W042 is raised on inherited manually specified primary key.\nDescription\n\t\nI have models which inherit from other models, and they should inherit the primary key. This works fine with Django 3.1. However, if I install Django 3.2 alpha, when I r",
+        "patch_preview": "diff --git a/django/db/models/base.py b/django/db/models/base.py\n--- a/django/db/models/base.py\n+++ b/django/db/models/base.py\n@@ -1299,6 +1299,11 @@ def check(cls, **kwargs):\n     def _check_default_pk(cls):\n         if (\n             cls._meta.pk.a"
+      },
+      {
+        "instance_id": "django__django-15368",
+        "repo": "django/django",
+        "distance": 0.714168591151749,
+        "problem_statement_preview": "bulk_update() does not work with plain F('...') expressions.\nDescription\n\t\nRepro:\nassign plain F(...) to some model instance field\nsave with bulk_update\nExample:\nCode highlighting:\n>>> from exampleapp.models import SelfRef\n>>> o = SelfRef.objects.all",
+        "patch_preview": "diff --git a/django/db/models/query.py b/django/db/models/query.py\n--- a/django/db/models/query.py\n+++ b/django/db/models/query.py\n@@ -17,7 +17,7 @@\n from django.db.models import AutoField, DateField, DateTimeField, sql\n from django.db.models.constan"
+      },
+      {
+        "instance_id": "django__django-11211",
+        "repo": "django/django",
+        "distance": 0.74596406543469,
+        "problem_statement_preview": "Prefetch related is not working when used GFK for model that uses UUID field as PK.\nDescription\n\t\nHow to reproduce:\ncreate model with UUID as primary key\nclass Foo(models.Model):\n\tid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=F",
+        "patch_preview": "diff --git a/django/db/models/fields/__init__.py b/django/db/models/fields/__init__.py\n--- a/django/db/models/fields/__init__.py\n+++ b/django/db/models/fields/__init__.py\n@@ -2325,6 +2325,10 @@ def deconstruct(self):\n     def get_internal_type(self):"
+      }
+    ],
+    "answer": "Cause:\nYou passed a generator (one-shot iterable) as cv: cv = KFold(n_splits=5).split(X).\n\nWhy it happens:\nSequentialFeatureSelector evaluates many candidate feature sets and needs to iterate over the cross-validation splits multiple times. A generator is exhausted after the first full pass, so subsequent iterations have no splits left, leading to failure.\n\nFix:\nPass a re-iterable CV splitter (e.g., the KFold object itself), an integer, or materialize the splits into a list.\n\nCorrected code:\nfrom sklearn.feature_selection import SequentialFeatureSelector\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.model_selection import KFold\nimport numpy as np\n\nX = np.random.randn(20, 5)\ny = np.random.randn(20)\n\n# Option 1 (recommended): pass the splitter object\ncv = KFold(n_splits=5)\nsfs = SequentialFeatureSelector(LinearRegression(), cv=cv)\nsfs.fit(X, y)\n\n# Option 2: materialize splits if you must pass an iterable\n# cv = list(KFold(n_splits=5).split(X))\n# sfs = SequentialFeatureSelector(LinearRegression(), cv=cv)\n# sfs.fit(X, y)"
+  },
+  {
+    "id": "case_112",
+    "expected_category": "astropy_mask_propagation",
+    "expected_keywords": [
+      "astropy",
+      "mask propagation",
+      "operand has no mask",
+      "NDDataRef"
+    ],
+    "retrieval_time_sec": 0.2259,
+    "answer_time_sec": 54.813,
+    "retrieved": [
+      {
+        "instance_id": "astropy__astropy-13033",
+        "repo": "astropy/astropy",
+        "distance": 0.6773699522018433,
+        "problem_statement_preview": "TimeSeries: misleading exception when required column check fails.\n<!-- This comments are hidden when you submit the issue,\r\nso you do not need to remove them! -->\r\n\r\n<!-- Please be sure to check out our contributing guidelines,\r\nhttps://github.com/a",
+        "patch_preview": "diff --git a/astropy/timeseries/core.py b/astropy/timeseries/core.py\n--- a/astropy/timeseries/core.py\n+++ b/astropy/timeseries/core.py\n@@ -55,6 +55,13 @@ class BaseTimeSeries(QTable):\n     _required_columns_relax = False\n \n     def _check_required_co"
+      },
+      {
+        "instance_id": "astropy__astropy-13398",
+        "repo": "astropy/astropy",
+        "distance": 0.7185013294219971,
+        "problem_statement_preview": "A direct approach to ITRS to Observed transformations that stays within the ITRS.\n<!-- This comments are hidden when you submit the issue,\r\nso you do not need to remove them! -->\r\n\r\n<!-- Please be sure to check out our contributing guidelines,\r\nhttps",
+        "patch_preview": "diff --git a/astropy/coordinates/builtin_frames/__init__.py b/astropy/coordinates/builtin_frames/__init__.py\n--- a/astropy/coordinates/builtin_frames/__init__.py\n+++ b/astropy/coordinates/builtin_frames/__init__.py\n@@ -48,6 +48,7 @@\n from . import ic"
+      },
+      {
+        "instance_id": "astropy__astropy-13453",
+        "repo": "astropy/astropy",
+        "distance": 0.7142277530295991,
+        "problem_statement_preview": "ASCII table output to HTML does not support supplied \"formats\"\n<!-- This comments are hidden when you submit the issue,\r\nso you do not need to remove them! -->\r\n\r\n<!-- Please be sure to check out our contributing guidelines,\r\nhttps://github.com/astro",
+        "patch_preview": "diff --git a/astropy/io/ascii/html.py b/astropy/io/ascii/html.py\n--- a/astropy/io/ascii/html.py\n+++ b/astropy/io/ascii/html.py\n@@ -349,11 +349,13 @@ def write(self, table):\n         cols = list(table.columns.values())\n \n         self.data.header.cols"
+      },
+      {
+        "instance_id": "astropy__astropy-7606",
+        "repo": "astropy/astropy",
+        "distance": 0.7194696581205622,
+        "problem_statement_preview": "Unit equality comparison with None raises TypeError for UnrecognizedUnit\n```\r\nIn [12]: x = u.Unit('asdf', parse_strict='silent')\r\n\r\nIn [13]: x == None  # Should be False\r\n---------------------------------------------------------------------------\r\nTy",
+        "patch_preview": "diff --git a/astropy/units/core.py b/astropy/units/core.py\n--- a/astropy/units/core.py\n+++ b/astropy/units/core.py\n@@ -728,7 +728,7 @@ def __eq__(self, other):\n         try:\n             other = Unit(other, parse_strict='silent')\n         except (Val"
+      },
+      {
+        "instance_id": "pydata__xarray-3677",
+        "repo": "pydata/xarray",
+        "distance": 0.6139927370556879,
+        "problem_statement_preview": "Merging dataArray into dataset using dataset method fails\nWhile it's possible to merge a dataset and a dataarray object using the top-level `merge()` function, if you try the same thing with the `ds.merge()` method it fails.\r\n\r\n```python\r\nimport xarr",
+        "patch_preview": "diff --git a/xarray/core/dataset.py b/xarray/core/dataset.py\n--- a/xarray/core/dataset.py\n+++ b/xarray/core/dataset.py\n@@ -3604,6 +3604,7 @@ def merge(\n             If any variables conflict (see ``compat``).\n         \"\"\"\n         _check_inplace(inpl"
+      }
+    ],
+    "answer": "Cause:\nNDDataRef.add drops the existing mask when the other operand has no mask (mask is None). The result’s mask becomes None instead of preserving or combining masks.\n\nWhy it happens:\nIn the arithmetic mixin used by NDDataRef, mask combination is only applied when both inputs have masks. If one operand’s mask is None, the code returns None for the output mask instead of treating the missing mask as an all-False array. Thus, a’s mask is lost when adding b.\n\nFix:\nProvide an explicit all-False mask for any operand that doesn’t have a mask, or upgrade to an astropy version where this propagation bug is fixed. As a workaround in your code, create b with a False mask so the masks are properly OR’ed.\n\nCorrected code:\nfrom astropy.nddata import NDDataRef\nimport numpy as np\n\na = NDDataRef(np.array([1, 2, 3]), mask=np.array([True, False, False]))\nb = NDDataRef(np.array([4, 5, 6]), mask=np.zeros(3, dtype=bool))  # ensure mask present\nc = a.add(b)\nprint(c.mask)  # expected: [ True False False ]"
+  }
+]
