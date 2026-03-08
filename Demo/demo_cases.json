@@ -1,0 +1,41 @@
+[
+  {
+    "id": "TC1",
+    "description": "Simple ZeroDivisionError demo",
+    "code": "def divide(a, b):\n    return a / b\n\nprint(divide(10, 0))\n",
+    "error": "ZeroDivisionError: division by zero",
+    "line_nums": "2,4",
+    "expected_answer_keywords": [
+      "division by zero",
+      "zero",
+      "b == 0",
+      "guard",
+      "raise",
+      "return"
+    ],
+    "expected_retrieval_keywords": [
+      "division",
+      "zero",
+      "error"
+    ]
+  },
+  {
+    "id": "TC2",
+    "description": "Simple NameError demo",
+    "code": "def greet(name):\n    return \"Hello, \" + Name\n\nprint(greet(\"Emre\"))\n",
+    "error": "NameError: name 'Name' is not defined",
+    "line_nums": "2",
+    "expected_answer_keywords": [
+      "NameError",
+      "not defined",
+      "Name",
+      "name",
+      "variable"
+    ],
+    "expected_retrieval_keywords": [
+      "nameerror",
+      "defined",
+      "variable"
+    ]
+  }
+]
