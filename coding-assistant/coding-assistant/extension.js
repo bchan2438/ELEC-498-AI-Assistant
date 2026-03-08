@@ -405,7 +405,7 @@ class SidebarProvider {
     white-space: pre-wrap;
     word-break: break-word;
     line-height: 1.6;
-    color: #ce9178;
+    color: #FFFFFF;
   }
 </style>
 </head>
