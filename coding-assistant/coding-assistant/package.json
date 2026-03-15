@@ -33,6 +33,10 @@
       {
         "command": "codingAssistant.runFile",
         "title": "Coding Assistant: Run Active Python File"
+      },
+      {
+        "command": "codingAssistant.askLLM",
+        "title": "Coding Assistant: Ask AI About Active File"
       }
     ]
   },

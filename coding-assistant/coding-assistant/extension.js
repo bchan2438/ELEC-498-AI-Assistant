@@ -21,6 +21,12 @@ function activate(context) {
       runActiveFile();
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('codingAssistant.askLLM', () => {
+      askLLMManually();
+    })
+  );
 }
 
 function deactivate() {}
@@ -113,6 +119,29 @@ function runActiveFile() {
         sidebarProvider?.finishRun(1, []);
       }
     });
+  });
+}
+
+// ─── Manual LLM Trigger ──────────────────────────────────────────────────────
+
+function askLLMManually() {
+  const editor = vscode.window.activeTextEditor;
+
+  if (!editor) {
+    vscode.window.showErrorMessage('Coding Assistant: No active file open.');
+    return;
+  }
+
+  const filePath = editor.document.uri.fsPath;
+
+  if (path.extname(filePath).toLowerCase() !== '.py') {
+    vscode.window.showErrorMessage('Coding Assistant: Active file is not a Python file (.py).');
+    return;
+  }
+
+  editor.document.save().then(() => {
+    // No stderr — pass empty string and no line numbers
+    runLLMPipeline(filePath, '', []);
   });
 }
 
@@ -241,6 +270,8 @@ class SidebarProvider {
     webviewView.webview.onDidReceiveMessage((message) => {
       if (message.command === 'runFile') {
         runActiveFile();
+      } else if (message.command === 'askLLM') {
+        askLLMManually();
       } else if (message.command === 'clearOutput') {
         this._post({ command: 'clear' });
       }
@@ -320,6 +351,14 @@ class SidebarProvider {
     color: var(--vscode-button-secondaryForeground);
   }
   #btn-clear:hover { background: var(--vscode-button-secondaryHoverBackground); }
+
+  #btn-ask {
+    background: #4a2d6e;
+    color: #e0b8ff;
+    flex: 1;
+  }
+  #btn-ask:hover { background: #5a3d7e; }
+  #btn-ask:disabled { opacity: 0.5; cursor: not-allowed; }
 
   #status {
     font-size: 11px;
@@ -405,7 +444,7 @@ class SidebarProvider {
     white-space: pre-wrap;
     word-break: break-word;
     line-height: 1.6;
-    color: #FFFFFF;
+    color: #ce9178;
   }
 </style>
 </head>
@@ -416,6 +455,9 @@ class SidebarProvider {
 <div class="btn-row">
   <button id="btn-run">▶ Run Active File</button>
   <button id="btn-clear">✕ Clear</button>
+</div>
+<div class="btn-row">
+  <button id="btn-ask">⚡ Ask AI About This File</button>
 </div>
 
 <div id="status">Open a .py file and press Run.</div>
@@ -447,10 +489,15 @@ class SidebarProvider {
   let firstChunk  = true;
 
   btnRun.addEventListener('click', () => vscode.postMessage({ command: 'runFile' }));
+  document.getElementById('btn-ask').addEventListener('click', () => vscode.postMessage({ command: 'askLLM' }));
   document.getElementById('btn-clear').addEventListener('click', () => vscode.postMessage({ command: 'clearOutput' }));
 
   window.addEventListener('message', ({ data: msg }) => {
     switch (msg.command) {
+
+      case 'askLLM':
+        vscode.postMessage({ command: 'askLLM' });
+        break;
 
       case 'startRun':
         firstChunk = true;
@@ -461,6 +508,7 @@ class SidebarProvider {
         llmStatus.textContent = '';
         llmStatus.className = '';
         btnRun.disabled = true;
+        document.getElementById('btn-ask').disabled = true;
         status.className = 'running';
         status.textContent = 'Running: ' + msg.filename + '…';
         break;
@@ -479,6 +527,7 @@ class SidebarProvider {
 
       case 'finishRun':
         btnRun.disabled = false;
+        document.getElementById('btn-ask').disabled = false;
         if (msg.exitCode === 0) {
           status.className = 'success';
           status.textContent = '✓ Finished successfully (exit 0)';

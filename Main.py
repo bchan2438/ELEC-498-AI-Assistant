@@ -19,7 +19,17 @@ def main():
         line_nums = sys.argv[3]
         out_file  = sys.argv[4]
 
-        question = f"The following Python code has an error:\n\n{code}\n\nError:\n{error}\n\nError on lines: {line_nums}\n\nPlease explain the error and suggest a fix."
+        question = f"""The following Python code has an error:
+        
+    {code}
+    
+    Error:
+    {error}
+    
+    Error on lines: {line_nums}
+    
+    Please explain the error and suggest a fix.
+    """
 
         conn = connection()
         result = rag_answer(conn, code, error, question)
@@ -31,9 +41,12 @@ def main():
     else:
         # Called directly from the terminal (original behaviour)
         conn = connection()
+        code = "print(x)"
+        error = "NameError: name 'x' is not defined"
         question = """from typing import List, TypeVar
         ...your test question here..."""
-        print(rag_answer(conn, question))
+        result = rag_answer(conn, code, error, question)
+        print(result)
     
         conn.close()
 
