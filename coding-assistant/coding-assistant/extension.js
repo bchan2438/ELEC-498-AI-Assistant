@@ -5,9 +5,19 @@ const fs = require('fs');
 const os = require('os');
 
 let sidebarProvider;
+let lastActiveFilePath = null;
 
 function activate(context) {
   sidebarProvider = new SidebarProvider(context.extensionUri);
+
+  // Track the last active Python file so split view can still run it
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor && path.extname(editor.document.uri.fsPath).toLowerCase() === '.py') {
+        lastActiveFilePath = editor.document.uri.fsPath;
+      }
+    })
+  );
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -27,6 +37,12 @@ function activate(context) {
       askLLMManually();
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('codingAssistant.openFullView', () => {
+      FullViewPanel.createOrShow(context.extensionUri);
+    })
+  );
 }
 
 function deactivate() {}
@@ -36,19 +52,26 @@ function deactivate() {}
 function runActiveFile() {
   const editor = vscode.window.activeTextEditor;
 
-  if (!editor) {
-    vscode.window.showErrorMessage('Coding Assistant: No active file open.');
+  const filePath = (editor && path.extname(editor.document.uri.fsPath).toLowerCase() === '.py')
+    ? editor.document.uri.fsPath
+    : lastActiveFilePath;
+
+  if (!filePath) {
+    vscode.window.showErrorMessage('Coding Assistant: No Python file has been opened yet.');
     return;
   }
-
-  const filePath = editor.document.uri.fsPath;
 
   if (path.extname(filePath).toLowerCase() !== '.py') {
     vscode.window.showErrorMessage('Coding Assistant: Active file is not a Python file (.py).');
     return;
   }
 
-  editor.document.save().then(() => {
+  // If editor is focused elsewhere, save via URI instead
+  const savePromise = editor
+    ? editor.document.save()
+    : vscode.workspace.openTextDocument(filePath).then(doc => doc.save());
+
+  savePromise.then(() => {
     const cwd = path.dirname(filePath);
     const filename = path.basename(filePath);
 
@@ -132,14 +155,26 @@ function askLLMManually() {
     return;
   }
 
-  const filePath = editor.document.uri.fsPath;
+  const filePath = editor
+    ? editor.document.uri.fsPath
+    : lastActiveFilePath;
+
+  if (!filePath) {
+    vscode.window.showErrorMessage('Coding Assistant: No Python file has been opened yet.');
+    return;
+  }
 
   if (path.extname(filePath).toLowerCase() !== '.py') {
     vscode.window.showErrorMessage('Coding Assistant: Active file is not a Python file (.py).');
     return;
   }
 
-  editor.document.save().then(() => {
+  // If editor is focused elsewhere, save via URI instead
+  const savePromise = editor
+    ? editor.document.save()
+    : vscode.workspace.openTextDocument(filePath).then(doc => doc.save());
+
+  savePromise.then(() => {
     // No stderr — pass empty string and no line numbers
     runLLMPipeline(filePath, '', []);
   });
@@ -264,20 +299,38 @@ class SidebarProvider {
 
   resolveWebviewView(webviewView) {
     this._view = webviewView;
+    this._fullPanel = null;
     webviewView.webview.options = { enableScripts: true };
     webviewView.webview.html = this._getHtml();
+
+    // Keep _view fresh whenever the sidebar becomes visible again
+    webviewView.onDidChangeVisibility(() => {
+      if (webviewView.visible) {
+        this._view = webviewView;
+      }
+    });
 
     webviewView.webview.onDidReceiveMessage((message) => {
       if (message.command === 'runFile') {
         runActiveFile();
       } else if (message.command === 'askLLM') {
         askLLMManually();
+      } else if (message.command === 'toggleView') {
+        if (FullViewPanel.currentPanel) {
+          // Split view is open — close it, sidebar will reopen via onDidDispose
+          FullViewPanel.currentPanel._panel.dispose();
+        } else {
+          // Sidebar is active — close it and open split view
+          vscode.commands.executeCommand('workbench.action.closeSidebar');
+          vscode.commands.executeCommand('codingAssistant.openFullView');
+        }
       } else if (message.command === 'clearOutput') {
         this._post({ command: 'clear' });
       }
     });
   }
 
+  get isReady() { return !!this._view; }
   startRun(filename)          { this._post({ command: 'startRun', filename }); }
   appendOutput(text)          { this._post({ command: 'stdout', text }); }
   appendError(text)           { this._post({ command: 'stderr', text }); }
@@ -286,7 +339,12 @@ class SidebarProvider {
   appendLLM(text)             { this._post({ command: 'llmChunk', text }); }
   finishLLM()                 { this._post({ command: 'finishLLM' }); }
 
-  _post(message) { this._view?.webview.postMessage(message); }
+  _post(message) {
+    this._view?.webview.postMessage(message);
+    if (FullViewPanel.currentPanel) {
+      this._fullPanel?._panel.webview.postMessage(message);
+    }
+  }
 
   _getHtml() {
     return /* html */ `<!DOCTYPE html>
@@ -359,6 +417,14 @@ class SidebarProvider {
   }
   #btn-ask:hover { background: #5a3d7e; }
   #btn-ask:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #btn-toggle-view {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    flex: 1;
+    font-size: 11px;
+  }
+  #btn-toggle-view:hover { background: var(--vscode-button-secondaryHoverBackground); }
 
   #status {
     font-size: 11px;
@@ -459,6 +525,9 @@ class SidebarProvider {
 <div class="btn-row">
   <button id="btn-ask">⚡ Ask AI About This File</button>
 </div>
+<div class="btn-row">
+  <button id="btn-toggle-view">⇄ Switch View</button>
+</div>
 
 <div id="status">Open a .py file and press Run.</div>
 
@@ -490,6 +559,7 @@ class SidebarProvider {
 
   btnRun.addEventListener('click', () => vscode.postMessage({ command: 'runFile' }));
   document.getElementById('btn-ask').addEventListener('click', () => vscode.postMessage({ command: 'askLLM' }));
+  document.getElementById('btn-toggle-view')?.addEventListener('click', () => vscode.postMessage({ command: 'toggleView' }));
   document.getElementById('btn-clear').addEventListener('click', () => vscode.postMessage({ command: 'clearOutput' }));
 
   window.addEventListener('message', ({ data: msg }) => {
@@ -498,6 +568,11 @@ class SidebarProvider {
       case 'askLLM':
         vscode.postMessage({ command: 'askLLM' });
         break;
+
+      case 'setViewMode': {
+        // button text is always "Switch View" - no change needed
+        break;
+      }
 
       case 'startRun':
         firstChunk = true;
@@ -617,6 +692,73 @@ class SidebarProvider {
 </script>
 </body>
 </html>`;
+  }
+}
+
+// ─── Full View Panel ──────────────────────────────────────────────────────────
+
+class FullViewPanel {
+  static currentPanel = null;
+
+  static createOrShow(extensionUri) {
+    const column = vscode.ViewColumn.Beside;
+
+    if (FullViewPanel.currentPanel) {
+      FullViewPanel.currentPanel._panel.reveal(column);
+      return;
+    }
+
+    const panel = vscode.window.createWebviewPanel(
+      'codingAssistantFull',
+      'Coding Assistant',
+      column,
+      { enableScripts: true }
+    );
+
+    FullViewPanel.currentPanel = new FullViewPanel(panel, extensionUri);
+
+    // Close sidebar and focus left editor so split is visible
+    vscode.commands.executeCommand('workbench.action.closeSidebar');
+    vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+  }
+
+  constructor(panel, extensionUri) {
+    this._panel = panel;
+    this._extensionUri = extensionUri;
+    this._panel.webview.html = this._getHtml();
+
+    this._panel.webview.onDidReceiveMessage((message) => {
+      if (message.command === 'runFile') {
+        runActiveFile();
+      } else if (message.command === 'askLLM') {
+        askLLMManually();
+      } else if (message.command === 'toggleView') {
+        // Dispose triggers onDidDispose which reopens the sidebar
+        this._panel.dispose();
+      } else if (message.command === 'clearOutput') {
+        this._post({ command: 'clear' });
+      }
+    });
+
+    this._panel.onDidDispose(() => {
+      FullViewPanel.currentPanel = null;
+      if (sidebarProvider) {
+        sidebarProvider._fullPanel = null;
+      }
+      // Reopen sidebar — give VS Code a tick to rebuild the webview
+      vscode.commands.executeCommand('workbench.view.extension.coding-assistant-sidebar');
+    });
+
+    // Register so the main provider can also push updates to this panel
+    if (sidebarProvider) { sidebarProvider._fullPanel = this; }
+  }
+
+  _post(message) { this._panel.webview.postMessage(message); }
+
+  _getHtml() {
+    const html = sidebarProvider?._getHtml() ?? '<html><body>Loading...</body></html>';
+    // Patch the button text for the full view
+    return html; // button always says Switch View
   }
 }
 

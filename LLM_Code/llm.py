@@ -131,8 +131,7 @@ Code snippet:
             return queries[:3]
     except json.JSONDecodeError:
         pass
-    if error:
-        return [""]
+    return [error] if error else [snippet[:100]]
 
 # RAG answer function
 

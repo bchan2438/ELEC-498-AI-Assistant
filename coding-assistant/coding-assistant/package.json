@@ -16,7 +16,7 @@
         {
           "id": "coding-assistant-sidebar",
           "title": "Coding Assistant",
-          "icon": "$(play)"
+          "icon": "media/icon.svg"
         }
       ]
     },
@@ -37,6 +37,10 @@
       {
         "command": "codingAssistant.askLLM",
         "title": "Coding Assistant: Ask AI About Active File"
+      },
+      {
+        "command": "codingAssistant.openFullView",
+        "title": "Coding Assistant: Open Full View"
       }
     ]
   },
