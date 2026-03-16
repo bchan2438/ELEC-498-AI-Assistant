@@ -12,7 +12,7 @@ def main():
 
     if len(sys.argv) >= 5:
         # Called from the VS Code extension
-        with open(sys.argv[1]) as f:
+        with open(sys.argv[1], 'r', encoding='utf-8') as f:
             code = f.read()
 
         error     = sys.argv[2]
@@ -35,7 +35,7 @@ def main():
         result = rag_answer(conn, code, error, question)
         conn.close()
 
-        with open(out_file, 'w') as f:
+        with open(out_file, 'w', encoding='utf-8') as f:
             f.write(result)
 
     else:
